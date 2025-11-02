@@ -7,7 +7,7 @@ from network.utils import write_varint
 
 @PacketRegistry.register
 class StatusRequest(BasePacket):
-    PACKET_ID = 0x00
+    PACKET_ID = 0x01
 
     def serialize(self) -> bytes:
         data = write_varint(self.PACKET_ID)
