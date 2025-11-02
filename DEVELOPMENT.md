@@ -7,7 +7,7 @@ Objectif de ce document: avoir une vue claire de l’état actuel et de la suite
 ## Fichiers et symboles clés
 
 - Racine
-  - [client.py](client.py) — exemple/entrée cliente (à compléter).
+  - [exemples/client.py](exemples/client.py) — exemple/entrée cliente (à compléter).
   - [__init__.py](__init__.py)
 - Réseau
   - [network/utils.py](network/utils.py)
@@ -19,24 +19,33 @@ Objectif de ce document: avoir une vue claire de l’état actuel et de la suite
     - [`network.utils.read_long`](network/utils.py)
     - [`network.utils.write_long`](network/utils.py)
 - Protocole
-  - [protocol/registry.py](protocol/registry.py)
-    - [`protocol.registry.PacketRegistry`](protocol/registry.py)
-    - [`protocol.registry.PacketRegistry.register`](protocol/registry.py)
-    - [`protocol.registry.PacketRegistry.get`](protocol/registry.py)
-    - [`protocol.registry.PacketRegistry.all`](protocol/registry.py)
+  - [protocol/__init__.py](protocol/__init__.py)
+    - [`protocol.State`](protocol/__init__.py)
+    - [`protocol.Direction`](protocol/__init__.py)
+    - [`protocol.PacketRegistry`](protocol/__init__.py)
+    - [`protocol.PacketRegistry.register`](protocol/__init__.py)
+    - [`protocol.PacketRegistry.get`](protocol/__init__.py)
+    - [`protocol.PacketRegistry.all`](protocol/__init__.py)
   - [protocol/base.py](protocol/base.py)
     - [`protocol.base.BasePacket`](protocol/base.py)
+    - [`protocol.base.BasePacket.STATE`](protocol/base.py)
+    - [`protocol.base.BasePacket.DIRECTION`](protocol/base.py)
   - [protocol/handshake.py](protocol/handshake.py)
     - [`protocol.handshake.Handshake`](protocol/handshake.py)
+    - [`protocol.handshake.Handshake.STATE`](protocol/handshake.py)
+    - [`protocol.handshake.Handshake.DIRECTION`](protocol/handshake.py)
   - [protocol/status.py](protocol/status.py)
     - [`protocol.status.StatusRequest`](protocol/status.py)
+    - [`protocol.status.StatusRequest.STATE`](protocol/status.py)
+    - [`protocol.status.StatusRequest.DIRECTION`](protocol/status.py)
 - Tests
   - [test/](test/) — dossier tests (vide).
 
 ## État actuel
 
 - Utils VarInt/String/Long implémentés dans [network/utils.py](network/utils.py).
-- Registre de paquets présent via [`protocol.registry.PacketRegistry`](protocol/registry.py).
+- Enums [`protocol.State`](protocol/__init__.py) et [`protocol.Direction`](protocol/__init__.py) pour les états et directions de paquets.
+- Registre de paquets [`protocol.PacketRegistry`](protocol/__init__.py) avec support état/direction pour éviter les collisions d'ID.
 - Paquets sortants (sérialisation):
   - [`protocol.handshake.Handshake`](protocol/handshake.py) — sérialisation complète (ID + champs + longueur).
   - [`protocol.status.StatusRequest`](protocol/status.py) — sérialisation minimale (ID + longueur).
@@ -44,13 +53,13 @@ Objectif de ce document: avoir une vue claire de l’état actuel et de la suite
 ## Chronologie des étapes à introduire
 
 1) Stabiliser la base et le registre
-- [ ] Retirer `@PacketRegistry.register` de [`protocol.base.BasePacket`](protocol/base.py) ou faire ignorer `PACKET_ID=None` dans [`protocol.registry.PacketRegistry.register`](protocol/registry.py).
-- [ ] Documenter la convention d’ID de paquets par “état” pour éviter les collisions (Handshake 0x00 et Status 0x00 coexistent car états distincts).
+- [x] Retirer `@PacketRegistry.register` de [`protocol.base.BasePacket`](protocol/base.py) ou faire ignorer `PACKET_ID=None` dans [`protocol.PacketRegistry.register`](protocol/__init__.py). (Le décorateur n'est pas sur la base, et PACKET_ID=None est géré.)
+- [] Documenter la convention d’ID de paquets par “état” pour éviter les collisions (Handshake 0x00 et Status 0x00 coexistent car états distincts). (Implémenté via clés (State, Direction, PACKET_ID).)
 
 2) Définir l’API de désérialisation
 - [ ] Ajouter une méthode `@classmethod deserialize(cls, data: bytes, offset=...) -> tuple[self, int]` sur [`protocol.base.BasePacket`](protocol/base.py).
 - [ ] Implémenter `deserialize` pour [`protocol.handshake.Handshake`](protocol/handshake.py) et [`protocol.status.StatusRequest`](protocol/status.py).
-- [ ] Créer un parseur générique: lire longueur via [`network.utils.read_varint`](network/utils.py), lire packet_id (VarInt), retrouver la classe via [`protocol.registry.PacketRegistry.get`](protocol/registry.py), puis déléguer à `deserialize`.
+- [ ] Créer un parseur générique: lire longueur via [`network.utils.read_varint`](network/utils.py), lire packet_id (VarInt), retrouver la classe via [`protocol.PacketRegistry.get`](protocol/__init__.py), puis déléguer à `deserialize`.
 
 3) Encapsulation trame (framing) et helpers
 - [ ] Centraliser l’encodage longueur+ID dans un helper commun (éviter duplication dans les `serialize`).
@@ -64,7 +73,7 @@ Objectif de ce document: avoir une vue claire de l’état actuel et de la suite
 5) Implémenter les paquets essentiels pour “status”
 - [ ] `StatusResponse` (JSON ou binaire selon cible).
 - [ ] `Ping` / `Pong` (aller-retour temps de latence).
-- [ ] Enregistrer ces paquets via [`protocol.registry.PacketRegistry.register`](protocol/registry.py).
+- [ ] Enregistrer ces paquets via [`protocol.PacketRegistry.register`](protocol/__init__.py).
 
 6) Validation et erreurs
 - [ ] Vérifier les bornes en lecture dans [`network.utils.read_varint`](network/utils.py) et [`network.utils.read_string`](network/utils.py) (offset/longueur).
@@ -90,7 +99,8 @@ Objectif de ce document: avoir une vue claire de l’état actuel et de la suite
 ## Checklist rapide (où j’en suis)
 
 - [x] Utils VarInt/String/Long — voir [network/utils.py](network/utils.py).
-- [x] Registre de paquets — voir [`protocol.registry.PacketRegistry`](protocol/registry.py).
+- [x] Enums State et Direction — voir [protocol/__init__.py](protocol/__init__.py).
+- [x] Registre de paquets avec support état/direction — voir [`protocol.PacketRegistry`](protocol/__init__.py).
 - [x] Paquets sortants: [`protocol.handshake.Handshake`](protocol/handshake.py), [`protocol.status.StatusRequest`](protocol/status.py).
 - [ ] Désérialisation et parseur de paquets.
 - [ ] I/O réseau (client/serveur) MVP.
@@ -102,6 +112,6 @@ Objectif de ce document: avoir une vue claire de l’état actuel et de la suite
 
 ## Prochaines actions immédiates
 
-- Ajouter `deserialize` + parseur générique basé sur [`network.utils.read_varint`](network/utils.py) et [`protocol.registry.PacketRegistry.get`](protocol/registry.py).
+- Ajouter `deserialize` + parseur générique basé sur [`network.utils.read_varint`](network/utils.py) et [`protocol.PacketRegistry.get`](protocol/__init__.py).
 - Écrire tests unitaires de base dans [test/](test/).
 - Mettre un exemple minimal dans [client.py](client.py).
