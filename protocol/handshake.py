@@ -3,13 +3,15 @@
 import struct
 
 from network.utils import write_varint, write_string
-from protocol import PacketRegistry
+from protocol import PacketRegistry, State, Direction
 from protocol.base import BasePacket
 
 
 @PacketRegistry.register
 class Handshake(BasePacket):
     PACKET_ID = 0x00
+    STATE = State.HANDSHAKING
+    DIRECTION = Direction.SERVERBOUND
 
     def __init__(self, protocol_version: int, server_address: str, server_port: int, next_state: int):
         self.protocol_version = protocol_version
