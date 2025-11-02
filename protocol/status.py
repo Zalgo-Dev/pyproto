@@ -1,8 +1,12 @@
 # protocol/status.py
 
+from protocol.base import BasePacket
+from protocol.registry import PacketRegistry
 from network.utils import write_varint
 
-class StatusRequest:
+
+@PacketRegistry.register
+class StatusRequest(BasePacket):
     PACKET_ID = 0x00
 
     def serialize(self) -> bytes:
