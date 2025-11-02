@@ -3,7 +3,7 @@
 import struct
 
 from network.utils import write_varint, write_string
-from protocol.registry import PacketRegistry
+from protocol import PacketRegistry
 from protocol.base import BasePacket
 
 
