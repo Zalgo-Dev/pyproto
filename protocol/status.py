@@ -1,7 +1,7 @@
 # protocol/status.py
 
 from protocol.base import BasePacket
-from protocol.registry import PacketRegistry
+from protocol import PacketRegistry
 from network.utils import write_varint
 
 
