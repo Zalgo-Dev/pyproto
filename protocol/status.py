@@ -7,7 +7,7 @@ from network.utils import write_varint
 
 @PacketRegistry.register
 class StatusRequest(BasePacket):
-    PACKET_ID = 0x01
+    PACKET_ID = 0x00
     STATE = State.STATUS
     DIRECTION = Direction.SERVERBOUND
 
